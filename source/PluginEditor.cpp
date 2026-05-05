@@ -5,22 +5,15 @@ PluginEditor::PluginEditor (PluginProcessor& p)
 {
     juce::ignoreUnused (processorRef);
 
-    addAndMakeVisible (inspectButton);
-
-    // this chunk of code instantiates and opens the melatonin inspector
-    inspectButton.onClick = [&] {
-        if (!inspector)
-        {
-            inspector = std::make_unique<melatonin::Inspector> (*this);
-            inspector->onClose = [this]() { inspector.reset(); };
-        }
-
-        inspector->setVisible (true);
-    };
-
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (400, 300);
+    setSize (200, 400);
+    gainSlider.setSliderStyle (juce::Slider::SliderStyle::LinearVertical);
+    gainSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 25);
+    gainSlider.setRange(-24.0f, 24.0f);
+    gainSlider.setValue(0.0f);
+    gainSlider.addListener(this);
+    addAndMakeVisible (gainSlider);
 }
 
 PluginEditor::~PluginEditor()
@@ -32,11 +25,7 @@ void PluginEditor::paint (juce::Graphics& g)
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 
-    auto area = getLocalBounds();
-    g.setColour (juce::Colours::white);
-    g.setFont (16.0f);
-    auto helloWorld = juce::String ("Hello from ") + PRODUCT_NAME_WITHOUT_VERSION + " v" VERSION + " running in " + CMAKE_BUILD_TYPE;
-    g.drawText (helloWorld, area.removeFromTop (150), juce::Justification::centred, false);
+
 }
 
 void PluginEditor::resized()
@@ -44,5 +33,13 @@ void PluginEditor::resized()
     // layout the positions of your child components here
     auto area = getLocalBounds();
     area.removeFromBottom(50);
-    inspectButton.setBounds (getLocalBounds().withSizeKeepingCentre(100, 50));
+    gainSlider.setBounds(getLocalBounds());
+}
+
+void PluginEditor::sliderValueChanged(juce::Slider* slider)
+{
+    if (slider == &gainSlider)
+    {
+        processorRef.rawVolume = pow(10, gainSlider.getValue() / 20);
+    }
 }

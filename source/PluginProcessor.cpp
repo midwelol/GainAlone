@@ -18,6 +18,19 @@ PluginProcessor::~PluginProcessor()
 {
 }
 
+juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "gain",
+        "Gain",
+        juce::NormalisableRange<float>(-24.0f, 24.0f, 0.1f),
+        0.0f,
+        "dB"
+        ));
+    return layout;
+}
 //==============================================================================
 const juce::String PluginProcessor::getName() const
 {
@@ -148,6 +161,10 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         auto* channelData = buffer.getWritePointer (channel);
         juce::ignoreUnused (channelData);
         // ..do something to the data...
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        {
+            channelData[sample] = buffer.getSample(channel, sample) * rawVolume;
+        }
     }
 }
 
